@@ -5,7 +5,7 @@ import sys, os
 from PIL import Image, ImageDraw, ImageOps
 
 SIZES = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
-BASE = 512
+BASE = 736  # resolusi sumber, supaya downscale sekali saja (lebih tajam)
 
 def default_icon():
     im = Image.new("RGBA", (BASE, BASE), (15, 17, 21, 255))
@@ -20,7 +20,7 @@ def default_icon():
 
 def from_photo(path):
     im = Image.open(path).convert("RGBA")
-    return ImageOps.fit(im, (BASE, BASE), Image.LANCZOS, centering=(0.5, 0.4))  # crop persegi
+    return ImageOps.fit(im, (BASE, BASE), Image.LANCZOS, centering=(0.5, 0.3))  # crop persegi
 
 src = from_photo(sys.argv[1]) if len(sys.argv) > 1 else default_icon()
 root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app/src/main/res")

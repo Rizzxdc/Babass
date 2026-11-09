@@ -3,100 +3,158 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bot Control</title>
 <style>
-:root{--bg:#0f1115;--card:#181b22;--bd:#2a2f3a;--tx:#e8eaf0;--mu:#8b93a7;--ac:#5b8cff}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;padding:12px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
-h1{font-size:18px;margin:4px 0 12px}h2{font-size:13px;margin:0 0 8px;color:var(--mu);font-weight:600;text-transform:uppercase}
-input,textarea{width:100%;background:#0f1115;color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:10px;font:inherit;margin-bottom:8px}
-textarea{font:12px ui-monospace,monospace;min-height:240px}
-button{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:10px 14px;font:inherit;font-weight:600}
-button.g{background:#2a2f3a}button.r{background:#c0392b}button.o{background:#1f8f5f}
+:root{--bg1:#d9f0ff;--bg2:#eaf7ff;--b1:#0066c0;--b2:#1ea7f0;--card:#ffffffee;--bd:#bfe0f7;--tx:#0b2a4a;--mu:#5f7f9c;--ac:#0a84d8;--mono:ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,var(--bg1),var(--bg2) 40%,#f4fbff);color:var(--tx);font:15px system-ui,sans-serif;padding:70px 14px 96px}
+header{position:fixed;top:0;left:0;right:0;z-index:5;height:58px;display:flex;align-items:center;gap:10px;padding:0 14px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;box-shadow:0 4px 14px #0066c055}
+header img{width:34px;height:34px;border-radius:50%;border:2px solid #fff8}
+header h1{flex:1;margin:0;font:700 17px var(--mono);letter-spacing:5px;text-transform:uppercase}
+header button{width:36px;height:36px;padding:0;border-radius:50%;background:#ffffff30;border:1.5px solid #fff9;font-size:16px}
+.card{background:var(--card);border:1.5px solid var(--bd);border-radius:20px;padding:14px;margin-bottom:14px;box-shadow:0 6px 18px #0a84d814}
+h2{font:700 13px var(--mono);letter-spacing:3px;margin:0 0 10px;color:var(--b1);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+h2 small{margin-left:auto;font:600 10px var(--mono);letter-spacing:1px;padding:3px 10px;border-radius:99px;background:#e3f3ff;border:1px solid var(--bd);color:var(--ac)}
+input,textarea{width:100%;background:#f3faff;color:var(--tx);border:1.5px solid var(--bd);border-radius:14px;padding:11px 12px;font:inherit;margin-bottom:8px;outline:0}
+input:focus,textarea:focus{border-color:var(--ac)}
+textarea{font:12px var(--mono);min-height:240px}
+button{background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;border:0;border-radius:14px;padding:11px 14px;font:inherit;font-weight:600}
+button:active{transform:scale(.97)}
+button.g{background:#e3f3ff;color:var(--b1);border:1.5px solid var(--bd)}
+button.r{background:linear-gradient(135deg,#c0392b,#ef6a5b)}button.o{background:linear-gradient(135deg,#0e8a6a,#2fd0a0)}
 .row{display:flex;gap:8px}.row>*{flex:1}
-.pill{display:inline-block;padding:2px 10px;border-radius:99px;background:#2a2f3a;font-size:13px}
-.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:var(--mu);margin-top:10px}
-.kv b{display:block;color:var(--tx);font-size:15px}
-#log{background:#0b0d11;border-radius:8px;padding:8px;height:220px;overflow:auto;font:11px/1.4 ui-monospace,monospace;white-space:pre-wrap;word-break:break-all}
-.code{font:700 28px ui-monospace,monospace;letter-spacing:4px;text-align:center;padding:10px;color:#3ecf8e}
-.item{padding:10px 6px;border-bottom:1px solid var(--bd)}
-#toast{position:fixed;left:12px;right:12px;bottom:16px;background:#2a2f3a;padding:12px;border-radius:10px;display:none;z-index:9}
-.hide{display:none}
+.pill{display:inline-block;padding:3px 12px;border-radius:99px;background:#ffd84a33;border:1.5px solid #ffd84a;color:#fff;font:700 11px var(--mono);letter-spacing:2px}
+.hero{border-radius:22px;padding:18px;margin-bottom:14px;color:#fff;background:radial-gradient(circle at 85% 20%,#5fd0ff,transparent 45%),linear-gradient(135deg,#02204a,#0066c0 60%,#1ea7f0);box-shadow:0 8px 22px #0066c055;display:flex;align-items:center;gap:14px;min-height:130px}
+.hero img{width:78px;height:78px;border-radius:50%;border:3px solid #fff9}
+.hero b{display:block;font:800 24px var(--mono);letter-spacing:5px}.hero span{font:12px var(--mono);letter-spacing:2px;opacity:.85}
+.dash{border-radius:22px;padding:16px;margin-bottom:14px;color:#fff;background:linear-gradient(135deg,var(--b1),var(--b2));border:2px solid #0a5fb5;box-shadow:0 8px 22px #0a84d855}
+.dash .top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dash .top div{flex:1}.dash .top b{display:block;font:700 18px var(--mono)}.dash .top small{font:11px var(--mono);letter-spacing:2px;opacity:.85}
+.stats{display:flex;justify-content:space-around;text-align:center}
+.stats>div{flex:1;font:700 14px var(--mono)}
+.stats i{display:flex;width:54px;height:54px;margin:0 auto 6px;border-radius:50%;align-items:center;justify-content:center;font-style:normal;font-size:22px;background:#ffffff26;border:2px solid #ffd84a}
+.stats>div:nth-child(2) i{border-color:#f3a6ff}.stats>div:nth-child(3) i{border-color:#ffb066}
+.stats small{display:block;font:10px var(--mono);letter-spacing:1px;opacity:.8;font-weight:400}
+.qa{display:flex;gap:10px;margin-bottom:14px}
+.qa button{flex:1;padding:18px 6px;border-radius:18px;font:700 13px var(--mono);letter-spacing:1px;box-shadow:0 6px 14px #0003}
+.qa button i{display:block;font-style:normal;font-size:22px;margin-bottom:6px}
+.qa .g2{background:linear-gradient(135deg,#7b3fa8,#3a0f5f)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;font:11px var(--mono);color:var(--mu)}.kv b{display:block;color:var(--tx);font-size:15px}
+#log{background:#08243f;color:#bfe9ff;border-radius:14px;padding:10px;height:60vh;overflow:auto;font:11px/1.45 var(--mono);white-space:pre-wrap;word-break:break-all}
+.code{font:800 28px var(--mono);letter-spacing:5px;text-align:center;padding:10px;color:var(--b1);background:#e3f3ff;border-radius:14px;margin:8px 0}
+.item{padding:12px 8px;border-bottom:1px solid var(--bd);font-family:var(--mono);font-size:13px}
+.item:active{background:#e3f3ff}
+nav{position:fixed;left:12px;right:12px;bottom:12px;z-index:5;display:flex;padding:6px;border-radius:30px;background:#fff;border:1.5px solid var(--bd);box-shadow:0 8px 24px #0a84d83a}
+nav button{flex:1;background:none;color:var(--mu);padding:8px 0;font:600 10px var(--mono);border-radius:24px}
+nav button i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
+nav button.on{background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff}
+#login{padding-top:30px}#login .hero{flex-direction:column;text-align:center}
+#toast{position:fixed;left:16px;right:16px;bottom:92px;background:#08243f;color:#fff;padding:12px;border-radius:14px;display:none;z-index:9;font-size:14px}
+.hide{display:none}.nr{display:none!important}
+select{width:100%;background:#f3faff;color:var(--tx);border:1.5px solid var(--bd);border-radius:14px;padding:11px 12px;font:inherit;margin-bottom:8px}
+.pill.rl{background:#e3f3ff;border-color:var(--bd);color:var(--b1);margin-left:6px;padding:2px 10px}
+header .pill{color:#fff;font-size:10px}
 </style></head><body>
 
 <div id="login" class="hide">
-  <h1>Bot Control</h1>
+  <div class="hero"><img src="logo.png" alt=""><div><b>BOT CONTROL</b><span>PANEL KENDALI BOT</span></div></div>
   <div class="card">
+    <h2>Masuk</h2>
     <input id="u" placeholder="Alamat server, mis. 163.52.135.142:3199" autocapitalize="off" autocorrect="off">
-    <input id="t" type="password" placeholder="Token API" autocapitalize="off">
+    <input id="un" placeholder="Username" autocapitalize="off" autocorrect="off">
+    <input id="t" type="password" placeholder="Password" autocapitalize="off" onkeydown="if(event.key==='Enter')login()">
     <button style="width:100%" onclick="login()">Masuk</button>
   </div>
 </div>
 
 <div id="app" class="hide">
-  <h1>Bot Control</h1>
-  <div class="card">
-    <h2>Status</h2>
-    <span class="pill" id="st">-</span>
-    <div class="kv">
-      <div>Nomor<b id="nm">-</b></div><div>Uptime<b id="up">-</b></div>
-      <div>RAM<b id="ram">-</b></div><div>Case<b id="tc">-</b></div>
+  <header><img src="logo.png" alt=""><h1>Bot Control</h1><span class="pill" id="rb"></span><button onclick="logout()" title="Keluar">⏻</button></header>
+
+  <div id="p-home" class="pg">
+    <div class="hero"><img src="logo.png" alt=""><div><b>BOT CONTROL</b><span>KELOLA BOT WHATSAPP</span></div></div>
+    <div class="dash">
+      <div class="top"><div><b id="nm">-</b><small>NOMOR AKTIF</small></div><span class="pill" id="st">-</span></div>
+      <div class="stats">
+        <div><i>⏱</i><span id="up">-</span><small>Uptime</small></div>
+        <div><i>💾</i><span id="ram">-</span><small>RAM</small></div>
+        <div><i>🧩</i><span id="tc">-</span><small>Case</small></div>
+      </div>
     </div>
-    <div class="row" style="margin-top:12px">
-      <button class="o" onclick="act('start')">Start</button>
-      <button class="g" onclick="act('restart')">Restart</button>
-      <button class="r" onclick="act('stop',1)">Stop</button>
+    <div data-min="admin"><h2>⚡ Quick Actions <small>BOT</small></h2>
+    <div class="qa">
+      <button class="o" onclick="act('start')"><i>▶</i>START</button>
+      <button class="g2" onclick="act('restart')"><i>⟳</i>RESTART</button>
+      <button class="r" onclick="act('stop',1)"><i>■</i>STOP</button>
+    </div></div>
+    <div class="card" data-min="admin">
+      <h2>Login WhatsApp <small>PAIRING</small></h2>
+      <input id="num" type="tel" placeholder="628xxxxxxxxxx">
+      <button style="width:100%" onclick="pair()">Minta pairing code</button>
+      <div id="pc" class="code hide"></div>
+      <button class="g" style="width:100%;margin-top:8px" onclick="reset()">Reset session (ganti nomor)</button>
     </div>
   </div>
 
-  <div class="card">
-    <h2>Login WhatsApp (pairing)</h2>
-    <input id="num" type="tel" placeholder="628xxxxxxxxxx">
-    <button style="width:100%" onclick="pair()">Minta pairing code</button>
-    <div id="pc" class="code hide"></div>
-    <button class="g" style="width:100%;margin-top:8px" onclick="reset()">Reset session (ganti nomor)</button>
+  <div id="p-sess" class="pg hide">
+    <div class="card">
+      <h2>Sesi Nomor <small>MULTI SENDER</small></h2>
+      <div class="row"><input id="snum" type="tel" placeholder="628xxxxxxxxxx"><button style="flex:0 0 auto;margin-bottom:8px" onclick="addSess()">+ Tambah</button></div>
+      <div id="spc" class="code hide"></div>
+      <div id="sl"></div>
+    </div>
+    <div id="dbv" class="card hide">
+      <h2 id="dbt">Database</h2>
+      <textarea id="dbj" readonly spellcheck="false" style="min-height:200px"></textarea>
+      <input data-min="admin" id="dbp" placeholder="path, mis. setbot.welcome" autocapitalize="off" autocorrect="off">
+      <input data-min="admin" id="dbx" placeholder='nilai JSON, mis. true / "teks" / ["a"]' autocapitalize="off" autocorrect="off">
+      <div class="row"><button data-min="admin" onclick="setDb()">Set nilai</button><button class="g" onclick="viewDb(dbCur,1)">Ringkas</button><button class="g" onclick="viewDb(dbCur,0)">Penuh</button><button class="g" onclick="$('dbv').classList.add('hide')">Tutup</button></div>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Sesi Nomor (multi sender)</h2>
-    <div class="row"><input id="snum" type="tel" placeholder="628xxxxxxxxxx"><button style="flex:0 0 auto;margin-bottom:8px" onclick="addSess()">+ Tambah</button></div>
-    <div id="spc" class="code hide"></div>
-    <div id="sl"></div>
+  <div id="p-log" class="pg hide"><div class="card"><h2>Log <small>LIVE</small></h2><div id="log"></div></div></div>
+
+  <div id="p-case" class="pg hide">
+    <div class="card">
+      <h2>Case <small>EDITOR</small></h2>
+      <div class="row"><input id="q" placeholder="Cari case..." oninput="renderCases()"><button data-min="admin" style="flex:0 0 auto;margin-bottom:8px" onclick="openCase(null)">+ Baru</button></div>
+      <div id="cl"></div>
+    </div>
+    <div id="ed" class="card hide">
+      <h2 id="et">Editor</h2>
+      <textarea id="code" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+      <div class="row"><button data-min="admin" onclick="saveCase()">Simpan</button><button data-min="admin" class="r" id="del" onclick="delCase()">Hapus</button><button class="g" onclick="$('ed').classList.add('hide')">Tutup</button></div>
+    </div>
   </div>
 
-  <div id="dbv" class="card hide">
-    <h2 id="dbt">Database</h2>
-    <textarea id="dbj" readonly spellcheck="false" style="min-height:200px"></textarea>
-    <input id="dbp" placeholder="path, mis. setbot.welcome" autocapitalize="off" autocorrect="off">
-    <input id="dbx" placeholder='nilai JSON, mis. true / "teks" / ["a"]' autocapitalize="off" autocorrect="off">
-    <div class="row"><button onclick="setDb()">Set nilai</button><button class="g" onclick="viewDb(dbCur,1)">Ringkas</button><button class="g" onclick="viewDb(dbCur,0)">Penuh</button><button class="g" onclick="$('dbv').classList.add('hide')">Tutup</button></div>
+  <div id="p-admin" class="pg hide">
+    <div class="card">
+      <h2>Tambah Akun <small>ADMIN</small></h2>
+      <input id="au" placeholder="Username (huruf kecil/angka/_)" autocapitalize="off" autocorrect="off">
+      <input id="ap" type="password" placeholder="Password (min 6)" autocapitalize="off">
+      <select id="ar"><option value="user">User biasa</option><option value="vip">VIP</option><option value="admin">Admin</option></select>
+      <button style="width:100%" onclick="addUser()">+ Buat akun</button>
+    </div>
+    <div class="card"><h2>Daftar Akun</h2><div id="ul"></div></div>
   </div>
 
-  <div class="card"><h2>Log</h2><div id="log"></div></div>
-
-  <div class="card">
-    <h2>Case</h2>
-    <div class="row"><input id="q" placeholder="Cari case..." oninput="renderCases()"><button style="flex:0 0 auto;margin-bottom:8px" onclick="openCase(null)">+ Baru</button></div>
-    <div id="cl"></div>
-  </div>
-
-  <div id="ed" class="card hide">
-    <h2 id="et">Editor</h2>
-    <textarea id="code" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
-    <div class="row"><button onclick="saveCase()">Simpan</button><button class="r" id="del" onclick="delCase()">Hapus</button><button class="g" onclick="$('ed').classList.add('hide')">Tutup</button></div>
-  </div>
-
-  <button class="g" style="width:100%" onclick="logout()">Keluar</button>
+  <nav>
+    <button class="on" data-t="home" onclick="tab('home')"><i>🏠</i>Home</button>
+    <button data-min="vip" data-t="sess" onclick="tab('sess')"><i>📱</i>Sesi</button>
+    <button data-t="log" onclick="tab('log')"><i>📜</i>Log</button>
+    <button data-min="vip" data-t="case" onclick="tab('case')"><i>🧩</i>Case</button>
+    <button data-min="admin" data-t="admin" onclick="tab('admin')"><i>👑</i>Admin</button>
+  </nav>
 </div>
 <div id="toast"></div>
 
 <script>
 const $=id=>document.getElementById(id);
+let role=localStorage.getItem('role')||'user';const rank=()=>({user:1,vip:2,admin:3}[role]||1);
 let url=localStorage.getItem('url')||'',tok=localStorage.getItem('tok')||'',last=0,cases=[],cur=null,tm;
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',3500)}
 async function api(m,p,b){
   try{
     const r=await fetch(url+p,{method:m,headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});
+    if(r.status===401&&p!=='/api/auth/login'){logout();toast('Sesi habis, silakan login lagi');return{ok:false,error:'Belum login'}}
     const j=await r.json().catch(()=>({ok:false,error:'Respons tidak valid'}));
     if(!r.ok&&!j.error)j.error='HTTP '+r.status;
     return j;
@@ -104,24 +162,48 @@ async function api(m,p,b){
 }
 function fmt(s){s=s||0;const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?h+'j '+m+'m':m+'m '+(s%60)+'d'}
 async function login(){
-  let u=$('u').value.trim().replace(/\/+$/,'');
-  if(!u||!$('t').value.trim())return toast('Isi alamat dan token');
+  let u=$('u').value.trim().replace(/\/+$/,''),un=$('un').value.trim().toLowerCase(),pw=$('t').value;
+  if(!u||!un||!pw)return toast('Isi alamat server, username, dan password');
   if(!/^https?:\/\//.test(u))u='http://'+u;
-  url=u;tok=$('t').value.trim();
-  const j=await api('GET','/api/status');
+  url=u;tok='';
+  const j=await api('POST','/api/auth/login',{username:un,password:pw});
   if(!j.ok)return toast(j.error||'Gagal masuk');
-  localStorage.setItem('url',url);localStorage.setItem('tok',tok);enter();
+  tok=j.token;role=j.role;$('t').value='';
+  localStorage.setItem('url',url);localStorage.setItem('tok',tok);localStorage.setItem('role',role);enter();
 }
-function logout(){localStorage.removeItem('tok');clearInterval(tm);tok='';$('app').classList.add('hide');$('login').classList.remove('hide')}
+function tab(n){if(n==='admin')loadUsers();document.querySelectorAll('.pg').forEach(e=>e.classList.toggle('hide',e.id!=='p-'+n));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===n));scrollTo(0,0)}
+function logout(){localStorage.removeItem('tok');localStorage.removeItem('role');clearInterval(tm);tok='';$('app').classList.add('hide');$('login').classList.remove('hide')}
+function applyRole(){
+  const need={user:1,vip:2,admin:3};
+  document.querySelectorAll('[data-min]').forEach(e=>e.classList.toggle('nr',rank()<need[e.dataset.min]));
+  $('rb').textContent=role==='vip'?'VIP':role.toUpperCase();
+}
 function enter(){
-  $('login').classList.add('hide');$('app').classList.remove('hide');
-  last=0;$('log').textContent='';loadCases();tick();clearInterval(tm);tm=setInterval(()=>{if(!document.hidden)tick()},3000);
+  $('login').classList.add('hide');$('app').classList.remove('hide');applyRole();tab('home');
+  last=0;$('log').textContent='';if(rank()>=2)loadCases();tick();clearInterval(tm);tm=setInterval(()=>{if(!document.hidden)tick()},3000);
+}
+async function loadUsers(){
+  const j=await api('GET','/api/auth/users');if(!j.ok)return toast(j.error);
+  $('ul').innerHTML=j.users.map(x=>'<div class="item"><b>'+esc(x.username)+'</b><span class="pill rl">'+x.role.toUpperCase()+'</span><div class="row" style="margin-top:8px">'+
+   ['user','vip','admin'].map(r=>'<button class="'+(x.role===r?'':'g')+'" style="padding:6px;font-size:12px" data-a="role" data-u="'+esc(x.username)+'" data-r="'+r+'">'+r+'</button>').join('')+
+   '<button class="g" style="padding:6px;font-size:12px" data-a="pw" data-u="'+esc(x.username)+'">Sandi</button><button class="r" style="padding:6px;font-size:12px" data-a="del" data-u="'+esc(x.username)+'">Hapus</button></div></div>').join('');
+}
+$('ul').addEventListener('click',async e=>{
+  const d=e.target.dataset;if(!d.a)return;let j;
+  if(d.a==='role')j=await api('PUT','/api/auth/users/'+d.u,{role:d.r});
+  else if(d.a==='pw'){const p=prompt('Password baru untuk '+d.u+' (min 6 karakter)');if(!p)return;j=await api('PUT','/api/auth/users/'+d.u,{password:p})}
+  else if(d.a==='del'){if(!confirm('Hapus akun '+d.u+'?'))return;j=await api('DELETE','/api/auth/users/'+d.u)}
+  toast(j.ok?'Berhasil':j.error);loadUsers();
+});
+async function addUser(){
+  const j=await api('POST','/api/auth/users',{username:$('au').value.trim().toLowerCase(),password:$('ap').value,role:$('ar').value});
+  toast(j.ok?'Akun dibuat':j.error);if(j.ok){$('au').value='';$('ap').value='';loadUsers()}
 }
 async function tick(){
-  loadSess();
+  if(rank()>=2)loadSess();
   const s=await api('GET','/api/status');
   if(s.ok){
-    $('st').textContent=s.status+(s.connected?' ✓':'');$('nm').textContent=s.number||'-';
+    $('st').textContent=(s.status+(s.connected?' ✓':'')).toUpperCase();$('nm').textContent=s.number||'-';
     $('up').textContent=fmt(s.uptimeSec);$('ram').textContent=s.memoryMB+' MB';$('tc').textContent=s.totalCases??'-';
     if(s.pairingCode){$('pc').textContent=s.pairingCode;$('pc').classList.remove('hide')}else $('pc').classList.add('hide');
   }else $('st').textContent=s.error||'error';
@@ -157,7 +239,7 @@ async function loadSess(){
     const lbl=s.type==='main'?'Utama':s.id;
     const info=s.status+(s.connected?' ✓':'')+(s.pairingCode?' • kode '+s.pairingCode:'')+(s.users!=null?' • '+s.users+' user':'');
     const b=(a,t,c)=>'<button class="'+(c||'g')+'" style="padding:6px 10px;font-size:13px" data-a="'+a+'" data-id="'+s.id+'">'+t+'</button>';
-    return '<div class="item"><b>'+esc(lbl)+'</b><div style="font-size:12px;color:var(--mu);margin:2px 0 6px">'+esc(info)+'</div><div class="row">'+(s.hasDb?b('db','Database'):'')+(s.type==='session'&&s.status!=='offline'?b('stop','Stop','r'):'')+(s.type==='session'?b('del','Hapus'):'')+'</div></div>';
+    return '<div class="item"><b>'+esc(lbl)+'</b><div style="font-size:12px;color:var(--mu);margin:2px 0 6px">'+esc(info)+'</div><div class="row">'+(s.hasDb?b('db','Database'):'')+(rank()>=3&&s.type==='session'&&s.status!=='offline'?b('stop','Stop','r'):'')+(rank()>=3&&s.type==='session'?b('del','Hapus'):'')+'</div></div>';
   }).join('');
 }
 $('sl').addEventListener('click',e=>{
@@ -187,7 +269,7 @@ async function viewDb(id,summary){
   const j=await api('GET','/api/sessions/'+id+'/db'+(summary?'?summary=1':''));
   if(!j.ok)return toast(j.error);
   $('dbv').classList.remove('hide');$('dbt').textContent='Database: '+(id==='main'?'Utama':id);
-  $('dbj').value=JSON.stringify(j.db,null,2);$('dbv').scrollIntoView();
+  $('dbj').value=JSON.stringify(j.db,null,2);tab('sess');$('dbv').scrollIntoView();
 }
 async function setDb(){
   if(!dbCur)return;
@@ -202,10 +284,10 @@ function renderCases(){
 }
 $('cl').addEventListener('click',e=>{const c=e.target.dataset.c;if(c)openCase(c)});
 async function openCase(n){
-  cur=n;$('ed').classList.remove('hide');$('et').textContent=n?'Edit: '+n:'Case baru';$('del').style.display=n?'':'none';
+  cur=n;$('ed').classList.remove('hide');$('code').readOnly=rank()<3;$('et').textContent=n?'Edit: '+n:'Case baru';$('del').style.display=n?'':'none';
   if(n){const j=await api('GET','/api/cases/'+encodeURIComponent(n));$('code').value=j.ok?j.code:'';if(!j.ok)toast(j.error)}
   else $('code').value='case "nama": {\n  reply("Halo!")\n  break\n}';
-  $('ed').scrollIntoView();
+  tab('case');$('ed').scrollIntoView();
 }
 async function saveCase(){
   const code=$('code').value;
@@ -219,5 +301,5 @@ async function delCase(){
   if(j.ok){$('ed').classList.add('hide');loadCases()}
 }
 $('u').value=url.replace(/^http:\/\//,'');
-if(url&&tok)api('GET','/api/status').then(j=>j.ok?enter():$('login').classList.remove('hide'));else $('login').classList.remove('hide');
+if(url&&tok)api('GET','/api/auth/me').then(j=>{if(j.ok){role=j.role;localStorage.setItem('role',role);enter()}else $('login').classList.remove('hide')});else $('login').classList.remove('hide');
 </script></body></html>
