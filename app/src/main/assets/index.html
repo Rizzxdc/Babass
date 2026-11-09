@@ -56,6 +56,21 @@ button.g{background:#2a2f3a}button.r{background:#c0392b}button.o{background:#1f8
     <button class="g" style="width:100%;margin-top:8px" onclick="reset()">Reset session (ganti nomor)</button>
   </div>
 
+  <div class="card">
+    <h2>Sesi Nomor (multi sender)</h2>
+    <div class="row"><input id="snum" type="tel" placeholder="628xxxxxxxxxx"><button style="flex:0 0 auto;margin-bottom:8px" onclick="addSess()">+ Tambah</button></div>
+    <div id="spc" class="code hide"></div>
+    <div id="sl"></div>
+  </div>
+
+  <div id="dbv" class="card hide">
+    <h2 id="dbt">Database</h2>
+    <textarea id="dbj" readonly spellcheck="false" style="min-height:200px"></textarea>
+    <input id="dbp" placeholder="path, mis. setbot.welcome" autocapitalize="off" autocorrect="off">
+    <input id="dbx" placeholder='nilai JSON, mis. true / "teks" / ["a"]' autocapitalize="off" autocorrect="off">
+    <div class="row"><button onclick="setDb()">Set nilai</button><button class="g" onclick="viewDb(dbCur,1)">Ringkas</button><button class="g" onclick="viewDb(dbCur,0)">Penuh</button><button class="g" onclick="$('dbv').classList.add('hide')">Tutup</button></div>
+  </div>
+
   <div class="card"><h2>Log</h2><div id="log"></div></div>
 
   <div class="card">
@@ -103,6 +118,7 @@ function enter(){
   last=0;$('log').textContent='';loadCases();tick();clearInterval(tm);tm=setInterval(()=>{if(!document.hidden)tick()},3000);
 }
 async function tick(){
+  loadSess();
   const s=await api('GET','/api/status');
   if(s.ok){
     $('st').textContent=s.status+(s.connected?' ✓':'');$('nm').textContent=s.number||'-';
@@ -132,6 +148,52 @@ async function pair(){
 async function reset(){
   if(!confirm('Hapus session dan logout bot?'))return;
   const j=await api('POST','/api/reset-session',{confirm:true});toast(j.ok?j.message:j.error);
+}
+
+let dbCur=null;
+async function loadSess(){
+  const j=await api('GET','/api/sessions');if(!j.ok)return;
+  $('sl').innerHTML=j.sessions.map(s=>{
+    const lbl=s.type==='main'?'Utama':s.id;
+    const info=s.status+(s.connected?' ✓':'')+(s.pairingCode?' • kode '+s.pairingCode:'')+(s.users!=null?' • '+s.users+' user':'');
+    const b=(a,t,c)=>'<button class="'+(c||'g')+'" style="padding:6px 10px;font-size:13px" data-a="'+a+'" data-id="'+s.id+'">'+t+'</button>';
+    return '<div class="item"><b>'+esc(lbl)+'</b><div style="font-size:12px;color:var(--mu);margin:2px 0 6px">'+esc(info)+'</div><div class="row">'+(s.hasDb?b('db','Database'):'')+(s.type==='session'&&s.status!=='offline'?b('stop','Stop','r'):'')+(s.type==='session'?b('del','Hapus'):'')+'</div></div>';
+  }).join('');
+}
+$('sl').addEventListener('click',e=>{
+  const a=e.target.dataset.a,id=e.target.dataset.id;if(!a)return;
+  if(a==='db')viewDb(id,1);else if(a==='stop')stopSess(id);else if(a==='del')delSess(id);
+});
+async function addSess(){
+  const n=$('snum').value.replace(/\D/g,'');if(!n)return toast('Isi nomor (628xxx)');
+  toast('Membuat sesi...');
+  const j=await api('POST','/api/sessions',{number:n});
+  if(j.ok){$('spc').textContent=j.pairingCode;$('spc').classList.remove('hide');toast('Masukkan kode di WhatsApp nomor tsb');$('snum').value=''}
+  else toast(j.error);
+  loadSess();
+}
+async function stopSess(id){
+  if(!confirm('Stop & logout sesi '+id+'? Database tetap tersimpan.'))return;
+  const j=await api('POST','/api/sessions/'+id+'/stop');toast(j.ok?j.message:j.error);loadSess();
+}
+async function delSess(id){
+  const wipe=confirm('Hapus juga DATABASE nomor '+id+'?\nOK = hapus sesi + database, Batal = lanjut tanpa hapus database');
+  if(!confirm('Yakin hapus sesi '+id+'?'))return;
+  const j=await api('DELETE','/api/sessions/'+id+(wipe?'?deleteDb=1':''));toast(j.ok?'Dihapus':j.error);
+  if(dbCur===id)$('dbv').classList.add('hide');loadSess();
+}
+async function viewDb(id,summary){
+  dbCur=id;
+  const j=await api('GET','/api/sessions/'+id+'/db'+(summary?'?summary=1':''));
+  if(!j.ok)return toast(j.error);
+  $('dbv').classList.remove('hide');$('dbt').textContent='Database: '+(id==='main'?'Utama':id);
+  $('dbj').value=JSON.stringify(j.db,null,2);$('dbv').scrollIntoView();
+}
+async function setDb(){
+  if(!dbCur)return;
+  let v;try{v=JSON.parse($('dbx').value)}catch{return toast('Nilai harus JSON valid')}
+  const j=await api('PUT','/api/sessions/'+dbCur+'/db',{path:$('dbp').value.trim(),value:v});
+  toast(j.ok?'Tersimpan':j.error);if(j.ok)viewDb(dbCur,1);
 }
 async function loadCases(){const j=await api('GET','/api/cases');if(j.ok){cases=j.cases;renderCases()}}
 function renderCases(){
