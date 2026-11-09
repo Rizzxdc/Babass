@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bot Control</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--bd:#2a2f3a;--tx:#e8eaf0;--mu:#8b93a7;--ac:#5b8cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;padding:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+h1{font-size:18px;margin:4px 0 12px}h2{font-size:13px;margin:0 0 8px;color:var(--mu);font-weight:600;text-transform:uppercase}
+input,textarea{width:100%;background:#0f1115;color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:10px;font:inherit;margin-bottom:8px}
+textarea{font:12px ui-monospace,monospace;min-height:240px}
+button{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:10px 14px;font:inherit;font-weight:600}
+button.g{background:#2a2f3a}button.r{background:#c0392b}button.o{background:#1f8f5f}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;background:#2a2f3a;font-size:13px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:var(--mu);margin-top:10px}
+.kv b{display:block;color:var(--tx);font-size:15px}
+#log{background:#0b0d11;border-radius:8px;padding:8px;height:220px;overflow:auto;font:11px/1.4 ui-monospace,monospace;white-space:pre-wrap;word-break:break-all}
+.code{font:700 28px ui-monospace,monospace;letter-spacing:4px;text-align:center;padding:10px;color:#3ecf8e}
+.item{padding:10px 6px;border-bottom:1px solid var(--bd)}
+#toast{position:fixed;left:12px;right:12px;bottom:16px;background:#2a2f3a;padding:12px;border-radius:10px;display:none;z-index:9}
+.hide{display:none}
+</style></head><body>
+
+<div id="login" class="hide">
+  <h1>Bot Control</h1>
+  <div class="card">
+    <input id="u" placeholder="Alamat server, mis. 163.52.135.142:3199" autocapitalize="off" autocorrect="off">
+    <input id="t" type="password" placeholder="Token API" autocapitalize="off">
+    <button style="width:100%" onclick="login()">Masuk</button>
+  </div>
+</div>
+
+<div id="app" class="hide">
+  <h1>Bot Control</h1>
+  <div class="card">
+    <h2>Status</h2>
+    <span class="pill" id="st">-</span>
+    <div class="kv">
+      <div>Nomor<b id="nm">-</b></div><div>Uptime<b id="up">-</b></div>
+      <div>RAM<b id="ram">-</b></div><div>Case<b id="tc">-</b></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="o" onclick="act('start')">Start</button>
+      <button class="g" onclick="act('restart')">Restart</button>
+      <button class="r" onclick="act('stop',1)">Stop</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Login WhatsApp (pairing)</h2>
+    <input id="num" type="tel" placeholder="628xxxxxxxxxx">
+    <button style="width:100%" onclick="pair()">Minta pairing code</button>
+    <div id="pc" class="code hide"></div>
+    <button class="g" style="width:100%;margin-top:8px" onclick="reset()">Reset session (ganti nomor)</button>
+  </div>
+
+  <div class="card"><h2>Log</h2><div id="log"></div></div>
+
+  <div class="card">
+    <h2>Case</h2>
+    <div class="row"><input id="q" placeholder="Cari case..." oninput="renderCases()"><button style="flex:0 0 auto;margin-bottom:8px" onclick="openCase(null)">+ Baru</button></div>
+    <div id="cl"></div>
+  </div>
+
+  <div id="ed" class="card hide">
+    <h2 id="et">Editor</h2>
+    <textarea id="code" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+    <div class="row"><button onclick="saveCase()">Simpan</button><button class="r" id="del" onclick="delCase()">Hapus</button><button class="g" onclick="$('ed').classList.add('hide')">Tutup</button></div>
+  </div>
+
+  <button class="g" style="width:100%" onclick="logout()">Keluar</button>
+</div>
+<div id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+let url=localStorage.getItem('url')||'',tok=localStorage.getItem('tok')||'',last=0,cases=[],cur=null,tm;
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',3500)}
+async function api(m,p,b){
+  try{
+    const r=await fetch(url+p,{method:m,headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});
+    const j=await r.json().catch(()=>({ok:false,error:'Respons tidak valid'}));
+    if(!r.ok&&!j.error)j.error='HTTP '+r.status;
+    return j;
+  }catch(e){return{ok:false,error:'Tidak bisa terhubung ke server'}}
+}
+function fmt(s){s=s||0;const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?h+'j '+m+'m':m+'m '+(s%60)+'d'}
+async function login(){
+  let u=$('u').value.trim().replace(/\/+$/,'');
+  if(!u||!$('t').value.trim())return toast('Isi alamat dan token');
+  if(!/^https?:\/\//.test(u))u='http://'+u;
+  url=u;tok=$('t').value.trim();
+  const j=await api('GET','/api/status');
+  if(!j.ok)return toast(j.error||'Gagal masuk');
+  localStorage.setItem('url',url);localStorage.setItem('tok',tok);enter();
+}
+function logout(){localStorage.removeItem('tok');clearInterval(tm);tok='';$('app').classList.add('hide');$('login').classList.remove('hide')}
+function enter(){
+  $('login').classList.add('hide');$('app').classList.remove('hide');
+  last=0;$('log').textContent='';loadCases();tick();clearInterval(tm);tm=setInterval(()=>{if(!document.hidden)tick()},3000);
+}
+async function tick(){
+  const s=await api('GET','/api/status');
+  if(s.ok){
+    $('st').textContent=s.status+(s.connected?' ✓':'');$('nm').textContent=s.number||'-';
+    $('up').textContent=fmt(s.uptimeSec);$('ram').textContent=s.memoryMB+' MB';$('tc').textContent=s.totalCases??'-';
+    if(s.pairingCode){$('pc').textContent=s.pairingCode;$('pc').classList.remove('hide')}else $('pc').classList.add('hide');
+  }else $('st').textContent=s.error||'error';
+  const l=await api('GET','/api/logs?since='+last);
+  if(l.ok&&l.logs.length){
+    const b=$('log'),near=b.scrollHeight-b.scrollTop-b.clientHeight<60;
+    b.textContent+=l.logs.map(x=>x.msg).join('\n')+'\n';
+    if(b.textContent.length>40000)b.textContent=b.textContent.slice(-30000);
+    last=l.last;if(near)b.scrollTop=b.scrollHeight;
+  }
+}
+async function act(a,ask){
+  if(ask&&!confirm('Hentikan bot?'))return;
+  const j=await api('POST','/api/'+a);toast(j.ok?'OK: '+(j.status||a):j.error);tick();
+}
+async function pair(){
+  const n=$('num').value.replace(/\D/g,'');if(!n)return toast('Isi nomor (628xxx)');
+  toast('Meminta kode...');
+  const j=await api('POST','/api/pair',{number:n});
+  if(j.ok&&j.pairingCode){$('pc').textContent=j.pairingCode;$('pc').classList.remove('hide');toast('Masukkan kode ini di WhatsApp')}
+  else toast(j.error||j.message||'Belum siap, tunggu sebentar');
+  tick();
+}
+async function reset(){
+  if(!confirm('Hapus session dan logout bot?'))return;
+  const j=await api('POST','/api/reset-session',{confirm:true});toast(j.ok?j.message:j.error);
+}
+async function loadCases(){const j=await api('GET','/api/cases');if(j.ok){cases=j.cases;renderCases()}}
+function renderCases(){
+  const q=$('q').value.toLowerCase();
+  $('cl').innerHTML=cases.filter(c=>c.toLowerCase().includes(q)).map(c=>'<div class="item" data-c="'+esc(c)+'">'+esc(c)+'</div>').join('')||'<div class="item">Kosong</div>';
+}
+$('cl').addEventListener('click',e=>{const c=e.target.dataset.c;if(c)openCase(c)});
+async function openCase(n){
+  cur=n;$('ed').classList.remove('hide');$('et').textContent=n?'Edit: '+n:'Case baru';$('del').style.display=n?'':'none';
+  if(n){const j=await api('GET','/api/cases/'+encodeURIComponent(n));$('code').value=j.ok?j.code:'';if(!j.ok)toast(j.error)}
+  else $('code').value='case "nama": {\n  reply("Halo!")\n  break\n}';
+  $('ed').scrollIntoView();
+}
+async function saveCase(){
+  const code=$('code').value;
+  const j=cur?await api('PUT','/api/cases/'+encodeURIComponent(cur),{code}):await api('POST','/api/cases',{code});
+  toast(j.ok?'Tersimpan, aktif otomatis':(j.error||'Gagal'));
+  if(j.ok){$('ed').classList.add('hide');loadCases()}
+}
+async function delCase(){
+  if(!confirm('Hapus case '+cur+'?'))return;
+  const j=await api('DELETE','/api/cases/'+encodeURIComponent(cur));toast(j.ok?'Dihapus':j.error);
+  if(j.ok){$('ed').classList.add('hide');loadCases()}
+}
+$('u').value=url.replace(/^http:\/\//,'');
+if(url&&tok)api('GET','/api/status').then(j=>j.ok?enter():$('login').classList.remove('hide'));else $('login').classList.remove('hide');
+</script></body></html>
