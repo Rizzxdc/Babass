@@ -8,5 +8,5 @@ WebView ke dashboard (app/src/main/assets/index.html) yang memanggil API bot.
    (Izinkan "Install dari sumber tidak dikenal" di HP.)
 
 ## Pakai
-Isi alamat server (mis. 163.52.135.142:3199) dan token API, lalu Masuk.
+Isi alamat server (mis. 163.52.135.142:3199), username dan password, lalu Masuk. Role: free / vip / owner (owner punya tab Admin).
 Alamat + token tersimpan di HP.
